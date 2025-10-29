@@ -3,61 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Base21 编码/解码工具</title>
+    <title>Base21 编码解码器</title>
     <!-- 引入 Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 使用 Inter 字体作为默认字体 */
+        /* 确保 Inter 字体可用 */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0d1117; /* 深色背景 */
-            color: #c9d1d9; /* 浅色文本 */
+            background-color: #f3f4f6;
+        }
+        /* 隐藏滚动条但保留滚动功能 */
+        textarea::-webkit-scrollbar {
+            display: none;
+        }
+        textarea {
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
         }
     </style>
 </head>
-<body class="p-4 sm:p-8 min-h-screen flex items-start justify-center">
+<body class="min-h-screen p-4 md:p-8 flex items-start justify-center">
 
-    <div class="w-full max-w-4xl bg-[#161b22] p-6 sm:p-8 rounded-xl shadow-2xl space-y-6">
-        <h1 class="text-3xl font-bold text-center text-white border-b border-gray-700 pb-4">Base21 编码/解码工具</h1>
-        <p class="text-center text-sm text-gray-400">字母表: <code class="bg-gray-700 text-yellow-300 px-2 py-1 rounded-md">ABCDFGHJKLMNPQRSTWXYZ</code> (共 21 个字符)</p>
+    <div class="w-full max-w-4xl bg-white shadow-xl rounded-2xl p-6 md:p-10 border border-gray-100">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 tracking-tight">Base21 编码解码工具</h1>
+            <p class="mt-2 text-lg text-gray-500">
+                使用字母表: <span class="font-mono text-indigo-600 font-semibold">ABCDFGHJKLMNPQRSTWXYZ</span> (21个字符)
+            </p>
+        </header>
 
-        <!-- 消息提示框 -->
-        <div id="messageBox" class="hidden p-3 rounded-lg text-sm font-medium transition-all duration-300"></div>
+        <!-- 编码/解码区域 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        <div class="grid md:grid-cols-2 gap-6">
-            <!-- 输入/原始数据区域 -->
-            <div class="space-y-4">
-                <label for="inputData" class="block text-lg font-medium text-gray-200">输入数据 (文本或 Base21 字符串)</label>
-                <textarea id="inputData" rows="6" class="w-full p-3 bg-[#0d1117] border border-gray-700 rounded-lg text-gray-50 focus:ring-blue-500 focus:border-blue-500 transition duration-150" placeholder="在此输入需要编码的普通文本，或需要解码的 Base21 字符串..."></textarea>
-                
-                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-                    <button onclick="handleEncode()" class="flex-1 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-150 shadow-md">
-                        编码 (文本/Bytes → Base21)
-                    </button>
-                    <button onclick="handleDecode()" class="flex-1 px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition duration-150 shadow-md">
-                        解码 (Base21 → 文本/Bytes)
-                    </button>
-                </div>
+            <!-- 输入区 -->
+            <div class="flex flex-col">
+                <label for="inputArea" class="text-sm font-medium text-gray-700 mb-2">输入文本 / Base21 字符串</label>
+                <textarea id="inputArea" rows="10" placeholder="在此输入您想要编码的文本或解码的 Base21 字符串..."
+                          class="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 text-gray-800"></textarea>
             </div>
 
-            <!-- 输出数据区域 -->
-            <div class="space-y-4">
-                <label for="outputResult" class="block text-lg font-medium text-gray-200">输出结果</label>
-                <textarea id="outputResult" rows="6" readonly class="w-full p-3 bg-[#0d1117] border border-gray-700 rounded-lg text-gray-50 select-text cursor-default"></textarea>
-                <button onclick="copyToClipboard()" class="w-full px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition duration-150 shadow-md">
-                    复制输出结果
-                </button>
+            <!-- 输出区 -->
+            <div class="flex flex-col">
+                <label for="outputArea" class="text-sm font-medium text-gray-700 mb-2">输出结果</label>
+                <textarea id="outputArea" rows="10" placeholder="结果将显示在此处..." readonly
+                          class="w-full p-4 border border-gray-300 bg-gray-50 rounded-xl text-gray-800 font-mono resize-none"></textarea>
             </div>
+
         </div>
+
+        <!-- 按钮和状态消息 -->
+        <div class="mt-6 flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4">
+            <button id="encodeButton"
+                    class="flex-1 px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition duration-300 shadow-md hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-50">
+                编码 (文本 → Base21)
+            </button>
+            <button id="decodeButton"
+                    class="flex-1 px-6 py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition duration-300 shadow-md hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-green-500 focus:ring-opacity-50">
+                解码 (Base21 → 文本)
+            </button>
+        </div>
+
+        <!-- 错误/信息提示 -->
+        <div id="statusMessage" class="mt-4 p-3 rounded-xl text-center font-medium transition duration-300 min-h-[40px]">
+            <!-- 状态消息显示在这里 -->
+        </div>
+
     </div>
 
     <script>
-        // --- Base21 核心常量和映射 ---
+        // Base21 常量和映射
         const BASE21_ALPHABET = "ABCDFGHJKLMNPQRSTWXYZ";
         const BASE21_SIZE = BASE21_ALPHABET.length; // 21
-
-        const VALUE_TO_CHAR = {};
         const CHAR_TO_VALUE = {};
+        const VALUE_TO_CHAR = {};
 
         for (let i = 0; i < BASE21_SIZE; i++) {
             const char = BASE21_ALPHABET[i];
@@ -65,154 +84,143 @@
             CHAR_TO_VALUE[char] = i;
         }
 
-        const encoder = new TextEncoder();
-        const decoder = new TextDecoder('utf-8');
+        // DOM 元素引用
+        const inputArea = document.getElementById('inputArea');
+        const outputArea = document.getElementById('outputArea');
+        const statusMessage = document.getElementById('statusMessage');
+        const encodeButton = document.getElementById('encodeButton');
+        const decodeButton = document.getElementById('decodeButton');
 
-        // --- 辅助函数：显示消息 ---
-        function displayMessage(message, isError = false) {
-            const outputEl = document.getElementById('outputResult');
-            const messageEl = document.getElementById('messageBox');
-            messageEl.textContent = message;
-            messageEl.className = `p-3 rounded-lg text-sm font-semibold transition-all duration-300 ${isError ? 'bg-red-700 text-white' : 'bg-green-600 text-white'}`;
-            messageEl.style.display = 'block';
-            outputEl.value = ''; // 清空输出区
+        /**
+         * 显示状态/错误消息
+         * @param {string} message 消息内容
+         * @param {string} type 'success' 或 'error'
+         */
+        function showStatus(message, type = 'info') {
+            statusMessage.textContent = message;
+            statusMessage.className = 'mt-4 p-3 rounded-xl text-center font-medium transition duration-300 min-h-[40px]'; // 重置类名
+            
+            if (type === 'success') {
+                statusMessage.classList.add('bg-green-100', 'text-green-800');
+            } else if (type === 'error') {
+                statusMessage.classList.add('bg-red-100', 'text-red-800', 'font-bold');
+            } else {
+                statusMessage.classList.add('text-gray-600');
+            }
         }
-        
-        // --- 核心编码逻辑 (bytes/Uint8Array -> Base21 string) ---
-        function base21_encode(dataArray) {
+
+        /**
+         * 将 string (UTF-8) 编码为 Base21 字符串。
+         * (1 字节 -> 2 字符)
+         * @param {string} dataString 要编码的字符串。
+         * @returns {string} Base21 编码结果。
+         */
+        function base21_encode(dataString) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(dataString); // Uint8Array (bytes)
             let encodedParts = [];
-            for (let i = 0; i < dataArray.length; i++) {
-                const byte = dataArray[i];
 
-                // 1 字节 (0-255) 拆分为 2 个 Base21 数字 (0-20)
-                const v1 = Math.floor(byte / BASE21_SIZE); // 相当于 Python 的 //
-                const v2 = byte % BASE21_SIZE;             // 相当于 Python 的 %
-
+            for (const byte of data) {
+                // 将 0-255 范围的字节分解为两个 Base21 索引
+                const v1 = Math.floor(byte / BASE21_SIZE); // 0-12
+                const v2 = byte % BASE21_SIZE;           // 0-20
+                
                 const c1 = VALUE_TO_CHAR[v1];
                 const c2 = VALUE_TO_CHAR[v2];
-
-                encodedParts.push(c1);
-                encodedParts.push(c2);
+                
+                encodedParts.push(c1, c2);
             }
             return encodedParts.join("");
         }
 
-        // --- 核心解码逻辑 (Base21 string -> bytes/Uint8Array) ---
+        /**
+         * 将 Base21 字符串解码为 string (UTF-8)。
+         * (2 字符 -> 1 字节)
+         * @param {string} encodedData Base21 字符串。
+         * @returns {string} 解码后的字符串。
+         * @throws {Error} 如果长度为奇数或包含无效字符。
+         */
         function base21_decode(encodedData) {
             if (encodedData.length % 2 !== 0) {
                 throw new Error("Base21 编码数据长度必须是 2 的倍数。");
             }
 
-            const decodedBytes = [];
+            let decodedBytes = [];
             
-            // 确保输入字符串只包含 Base21 字母表中的字符
-            const invalidChars = encodedData.split('').filter(c => !CHAR_TO_VALUE.hasOwnProperty(c));
-            if (invalidChars.length > 0) {
-                // 仅显示前几个无效字符
-                const uniqueInvalidChars = [...new Set(invalidChars)].slice(0, 5);
-                throw new Error(`输入包含无效的 Base21 字符: ${uniqueInvalidChars.join(', ')}。有效字符为: ${BASE21_ALPHABET}`);
-            }
-
-
             for (let i = 0; i < encodedData.length; i += 2) {
                 const c1 = encodedData[i];
                 const c2 = encodedData[i + 1];
 
                 const v1 = CHAR_TO_VALUE[c1];
                 const v2 = CHAR_TO_VALUE[c2];
-                
-                // v1 和 v2 经过上一轮过滤已经保证不会是 undefined，这里主要处理数据合成
-                
-                // 将 2 个 Base21 数字合成 1 个字节
-                // byte = v1 * BASE21_SIZE + v2
-                const byteValue = v1 * BASE21_SIZE + v2;
 
-                // 检查合成的值是否在 8 位字节限制内 (0-255)
-                if (byteValue > 255) {
-                    throw new Error(`解码值 ${byteValue} 超过 8 位限制 (255)。 Base21 序列 ${c1}${c2} 可能是无效的。`);
+                if (v1 === undefined || v2 === undefined) {
+                    const invalidChar = v1 === undefined ? c1 : c2;
+                    throw new Error(`无效的 Base21 字符："${invalidChar}"。字符必须来自字母表: ${BASE21_ALPHABET}`);
                 }
-
+                
+                // 重建字节值：v1 * 21 + v2
+                const byteValue = v1 * BASE21_SIZE + v2;
+                
+                if (byteValue > 255) {
+                    throw new Error(`解码值 ${byteValue} 超过 8 位限制 (255)。无效的 Base21 序列: ${c1}${c2}。`);
+                }
+                
                 decodedBytes.push(byteValue);
             }
-            return new Uint8Array(decodedBytes);
-        }
-        
-        // --- UI 事件处理：编码 ---
-        function handleEncode() {
-            const inputEl = document.getElementById('inputData');
-            const outputEl = document.getElementById('outputResult');
-            const inputData = inputEl.value;
 
-            if (!inputData) {
-                displayMessage("请输入需要编码的文本。", true);
+            // 将字节数组转换为 Uint8Array，然后使用 TextDecoder 解码为 UTF-8 字符串
+            const uint8Array = new Uint8Array(decodedBytes);
+            const decoder = new TextDecoder('utf-8');
+            return decoder.decode(uint8Array);
+        }
+
+        // --- 事件监听器 ---
+
+        encodeButton.addEventListener('click', () => {
+            const input = inputArea.value.trim();
+            outputArea.value = '';
+            showStatus('');
+
+            if (!input) {
+                showStatus('请输入要编码的文本。', 'error');
                 return;
             }
 
             try {
-                // 1. 将字符串转换为 UTF-8 字节数组
-                const originalBytes = encoder.encode(inputData);
-                
-                // 2. 编码
-                const encodedString = base21_encode(originalBytes);
-                
-                // 3. 显示结果
-                document.getElementById('messageBox').style.display = 'none'; // 隐藏任何旧消息
-                outputEl.value = encodedString;
-                displayMessage(`编码成功！原始字节数: ${originalBytes.length}，Base21 长度: ${encodedString.length}。`, false);
-
-            } catch (error) {
-                console.error("编码错误:", error);
-                displayMessage(`编码失败: ${error.message}`, true);
+                const encodedString = base21_encode(input);
+                outputArea.value = encodedString;
+                showStatus('编码成功！', 'success');
+            } catch (e) {
+                console.error(e);
+                showStatus(`编码失败: ${e.message}`, 'error');
             }
-        }
+        });
 
-        // --- UI 事件处理：解码 ---
-        function handleDecode() {
-            const inputEl = document.getElementById('inputData');
-            const outputEl = document.getElementById('outputResult');
-            const inputData = inputEl.value.toUpperCase().replace(/\s/g, ''); // 统一转大写并移除空格
+        decodeButton.addEventListener('click', () => {
+            const input = inputArea.value.trim().toUpperCase(); // Base21 字符通常大写
+            outputArea.value = '';
+            showStatus('');
 
-            if (!inputData) {
-                displayMessage("请输入需要解码的 Base21 字符串。", true);
+            if (!input) {
+                showStatus('请输入要解码的 Base21 字符串。', 'error');
                 return;
             }
 
             try {
-                // 1. 解码
-                const decodedBytes = base21_decode(inputData);
-
-                // 2. 将字节数组转换为 UTF-8 字符串
-                const decodedText = decoder.decode(decodedBytes);
-                
-                // 3. 显示结果
-                document.getElementById('messageBox').style.display = 'none'; // 隐藏任何旧消息
-                outputEl.value = decodedText;
-                displayMessage(`解码成功！Base21 长度: ${inputData.length}，还原字节数: ${decodedBytes.length}。`, false);
-
-
-            } catch (error) {
-                console.error("解码错误:", error);
-                displayMessage(`解码失败: ${error.message}`, true);
+                const decodedString = base21_decode(input);
+                outputArea.value = decodedString;
+                showStatus('解码成功！', 'success');
+            } catch (e) {
+                console.error(e);
+                showStatus(`解码失败: ${e.message}`, 'error');
             }
-        }
+        });
 
-        // --- 复制到剪贴板 ---
-        function copyToClipboard() {
-            const outputEl = document.getElementById('outputResult');
-            if (outputEl.value) {
-                outputEl.select();
-                document.execCommand('copy');
-                displayMessage('结果已复制到剪贴板！', false);
-            } else {
-                displayMessage('没有内容可以复制。', true);
-            }
-        }
-
-        // --- 示例用法 (可选：启动时设置示例) ---
+        // 默认提示信息
         window.onload = () => {
-             document.getElementById('inputData').value = "Hello Base21";
-             document.getElementById('messageBox').style.display = 'none';
-        }
+             showStatus('请在左侧输入内容，然后选择编码或解码。');
+        };
     </script>
 </body>
 </html>
