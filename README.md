@@ -1,6 +1,6 @@
 # Base21 编码解码工具 (自定义字母表)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 ## 简介
 
@@ -42,4 +42,4 @@ Base21 编码旨在将 8 位（1 字节，范围 0-255）的数据映射为两�
 > 📝 **重要：** 编码和解码必须使用**相同的字母表**，否则将导致解码失败或数据错误。如果字母表输入无效，工具将无法执行操作。
 
 ## 许可证
-本项目采用 MIT 许可证。
+本项目采用 Apache License 2.0 许可证。
