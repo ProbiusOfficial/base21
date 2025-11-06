@@ -3,17 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Base21 编码解码器</title>
-    <!-- 引入 Tailwind CSS CDN -->
+    <title>Base21 - 编码解码工具</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 确保 Inter 字体可用 */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6;
         }
-        /* 隐藏滚动条但保留滚动功能 */
         textarea::-webkit-scrollbar {
             display: none;
         }
@@ -27,23 +24,32 @@
 
     <div class="w-full max-w-4xl bg-white shadow-xl rounded-2xl p-6 md:p-10 border border-gray-100">
         <header class="text-center mb-8">
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 tracking-tight">Base21 编码解码工具</h1>
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 tracking-tight">Base21 - 编码解码工具</h1>
             <p class="mt-2 text-lg text-gray-500">
-                使用字母表: <span class="font-mono text-indigo-600 font-semibold">ABCDFGHJKLMNPQRSTWXYZ</span> (21个字符)
+                当前基数: <span id="currentBase" class="font-mono text-indigo-600 font-semibold">21</span>
             </p>
         </header>
+        
+        <div class="mb-6 p-4 border border-indigo-200 bg-indigo-50 rounded-xl">
+            <label for="alphabetInput" class="text-sm font-medium text-gray-700 mb-2 block">
+                🛠️ 定义字母表:
+            </label>
+            <input type="text" id="alphabetInput" value="ABCDEFGHIJKLMNOPQRSTU" maxlength="21"
+                   class="w-full p-3 border border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 text-gray-800 font-mono"
+                   placeholder="请输入 21 个不重复的字符作为字母表">
+            <p id="alphabetStatus" class="mt-2 text-xs font-medium text-gray-600">
+                长度: 21 / 21。基数: 21。
+            </p>
+        </div>
 
-        <!-- 编码/解码区域 -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-            <!-- 输入区 -->
             <div class="flex flex-col">
-                <label for="inputArea" class="text-sm font-medium text-gray-700 mb-2">输入文本 / Base21 字符串</label>
-                <textarea id="inputArea" rows="10" placeholder="在此输入您想要编码的文本或解码的 Base21 字符串..."
+                <label for="inputArea" class="text-sm font-medium text-gray-700 mb-2">输入文本 / Base-N 字符串</label>
+                <textarea id="inputArea" rows="10" placeholder="在此输入您想要编码的文本或解码的 Base-N 字符串..."
                           class="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 text-gray-800"></textarea>
             </div>
 
-            <!-- 输出区 -->
             <div class="flex flex-col">
                 <label for="outputArea" class="text-sm font-medium text-gray-700 mb-2">输出结果</label>
                 <textarea id="outputArea" rows="10" placeholder="结果将显示在此处..." readonly
@@ -52,44 +58,82 @@
 
         </div>
 
-        <!-- 按钮和状态消息 -->
         <div class="mt-6 flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4">
             <button id="encodeButton"
                     class="flex-1 px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition duration-300 shadow-md hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-50">
-                编码 (文本 → Base21)
+                编码 (文本 → Base-N)
             </button>
             <button id="decodeButton"
                     class="flex-1 px-6 py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition duration-300 shadow-md hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-green-500 focus:ring-opacity-50">
-                解码 (Base21 → 文本)
+                解码 (Base-N → 文本)
             </button>
         </div>
 
-        <!-- 错误/信息提示 -->
         <div id="statusMessage" class="mt-4 p-3 rounded-xl text-center font-medium transition duration-300 min-h-[40px]">
-            <!-- 状态消息显示在这里 -->
-        </div>
+            </div>
 
     </div>
 
     <script>
-        // Base21 常量和映射
-        const BASE21_ALPHABET = "ABCDFGHJKLMNPQRSTWXYZ";
-        const BASE21_SIZE = BASE21_ALPHABET.length; // 21
-        const CHAR_TO_VALUE = {};
-        const VALUE_TO_CHAR = {};
-
-        for (let i = 0; i < BASE21_SIZE; i++) {
-            const char = BASE21_ALPHABET[i];
-            VALUE_TO_CHAR[i] = char;
-            CHAR_TO_VALUE[char] = i;
-        }
-
         // DOM 元素引用
+        const alphabetInput = document.getElementById('alphabetInput');
+        const alphabetStatus = document.getElementById('alphabetStatus');
+        const currentBaseSpan = document.getElementById('currentBase');
         const inputArea = document.getElementById('inputArea');
         const outputArea = document.getElementById('outputArea');
         const statusMessage = document.getElementById('statusMessage');
         const encodeButton = document.getElementById('encodeButton');
         const decodeButton = document.getElementById('decodeButton');
+
+
+        let BASE_ALPHABET = "";
+        let BASE_SIZE = 0;
+        let CHAR_TO_VALUE = {};
+        let VALUE_TO_CHAR = {};
+        const REQUIRED_SIZE = 21; 
+
+
+        function initializeAlphabet(newAlphabet) {
+            BASE_ALPHABET = newAlphabet;
+            BASE_SIZE = BASE_ALPHABET.length;
+
+            CHAR_TO_VALUE = {};
+            VALUE_TO_CHAR = {};
+
+            for (let i = 0; i < BASE_SIZE; i++) {
+                const char = BASE_ALPHABET[i];
+                VALUE_TO_CHAR[i] = char;
+                CHAR_TO_VALUE[char] = i;
+            }
+        }
+
+        /**
+         * 检查字母表的有效性并更新状态
+         * @returns {boolean} 字母表是否有效
+         */
+        function validateAlphabet() {
+            const input = alphabetInput.value.trim();
+            const uniqueChars = new Set(input);
+            const statusText = `长度: ${input.length} / ${REQUIRED_SIZE}。基数: ${input.length}。`;
+
+            if (input.length !== REQUIRED_SIZE) {
+                alphabetStatus.innerHTML = `<span class="text-red-600 font-bold">错误: 字母表长度必须是 ${REQUIRED_SIZE}。</span> ${statusText}`;
+                currentBaseSpan.textContent = input.length;
+                return false;
+            }
+
+            if (uniqueChars.size !== REQUIRED_SIZE) {
+                alphabetStatus.innerHTML = `<span class="text-red-600 font-bold">错误: 字母表中的字符不能重复。</span> ${statusText}`;
+                currentBaseSpan.textContent = input.length;
+                return false;
+            }
+            
+            // 验证通过
+            initializeAlphabet(input);
+            alphabetStatus.innerHTML = `<span class="text-green-600 font-bold">字母表有效。</span> ${statusText}`;
+            currentBaseSpan.textContent = BASE_SIZE;
+            return true;
+        }
 
         /**
          * 显示状态/错误消息
@@ -110,20 +154,20 @@
         }
 
         /**
-         * 将 string (UTF-8) 编码为 Base21 字符串。
+         * 将 string (UTF-8) 编码为 Base-N 字符串。
          * (1 字节 -> 2 字符)
          * @param {string} dataString 要编码的字符串。
-         * @returns {string} Base21 编码结果。
+         * @returns {string} Base-N 编码结果。
          */
-        function base21_encode(dataString) {
+        function base_encode(dataString) {
             const encoder = new TextEncoder();
             const data = encoder.encode(dataString); // Uint8Array (bytes)
             let encodedParts = [];
 
             for (const byte of data) {
-                // 将 0-255 范围的字节分解为两个 Base21 索引
-                const v1 = Math.floor(byte / BASE21_SIZE); // 0-12
-                const v2 = byte % BASE21_SIZE;           // 0-20
+
+                const v1 = Math.floor(byte / BASE_SIZE); // 0-12 
+                const v2 = byte % BASE_SIZE;            // 0-20 
                 
                 const c1 = VALUE_TO_CHAR[v1];
                 const c2 = VALUE_TO_CHAR[v2];
@@ -134,15 +178,15 @@
         }
 
         /**
-         * 将 Base21 字符串解码为 string (UTF-8)。
+         * 将 Base-N 字符串解码为 string (UTF-8)。
          * (2 字符 -> 1 字节)
-         * @param {string} encodedData Base21 字符串。
+         * @param {string} encodedData Base-N 字符串。
          * @returns {string} 解码后的字符串。
          * @throws {Error} 如果长度为奇数或包含无效字符。
          */
-        function base21_decode(encodedData) {
+        function base_decode(encodedData) {
             if (encodedData.length % 2 !== 0) {
-                throw new Error("Base21 编码数据长度必须是 2 的倍数。");
+                throw new Error("编码数据长度必须是 2 的倍数。");
             }
 
             let decodedBytes = [];
@@ -156,14 +200,14 @@
 
                 if (v1 === undefined || v2 === undefined) {
                     const invalidChar = v1 === undefined ? c1 : c2;
-                    throw new Error(`无效的 Base21 字符："${invalidChar}"。字符必须来自字母表: ${BASE21_ALPHABET}`);
+                    throw new Error(`无效的 Base-${BASE_SIZE} 字符："${invalidChar}"。字符必须来自字母表: ${BASE_ALPHABET}`);
                 }
                 
-                // 重建字节值：v1 * 21 + v2
-                const byteValue = v1 * BASE21_SIZE + v2;
+                // 重建字节值：v1 * BASE_SIZE + v2
+                const byteValue = v1 * BASE_SIZE + v2;
                 
                 if (byteValue > 255) {
-                    throw new Error(`解码值 ${byteValue} 超过 8 位限制 (255)。无效的 Base21 序列: ${c1}${c2}。`);
+                    throw new Error(`解码值 ${byteValue} 超过 8 位限制 (255)。无效的 Base-${BASE_SIZE} 序列: ${c1}${c2}。`);
                 }
                 
                 decodedBytes.push(byteValue);
@@ -175,9 +219,20 @@
             return decoder.decode(uint8Array);
         }
 
-        // --- 事件监听器 ---
+
+        alphabetInput.addEventListener('input', () => {
+            validateAlphabet();
+            outputArea.value = '';
+            showStatus('请重新进行编码或解码操作。', 'info');
+        });
 
         encodeButton.addEventListener('click', () => {
+            if (!validateAlphabet()) {
+                showStatus('编码失败: 请先定义一个有效的 21 个字符的字母表。', 'error');
+                outputArea.value = '';
+                return;
+            }
+            
             const input = inputArea.value.trim();
             outputArea.value = '';
             showStatus('');
@@ -188,9 +243,9 @@
             }
 
             try {
-                const encodedString = base21_encode(input);
+                const encodedString = base_encode(input);
                 outputArea.value = encodedString;
-                showStatus('编码成功！', 'success');
+                showStatus(`编码成功！基数: ${BASE_SIZE}`, 'success');
             } catch (e) {
                 console.error(e);
                 showStatus(`编码失败: ${e.message}`, 'error');
@@ -198,28 +253,37 @@
         });
 
         decodeButton.addEventListener('click', () => {
-            const input = inputArea.value.trim().toUpperCase(); // Base21 字符通常大写
+            if (!validateAlphabet()) {
+                showStatus('解码失败: 请先定义一个有效的 21 个字符的字母表。', 'error');
+                outputArea.value = '';
+                return;
+            }
+            
+
+            const input = inputArea.value.trim(); 
             outputArea.value = '';
             showStatus('');
 
             if (!input) {
-                showStatus('请输入要解码的 Base21 字符串。', 'error');
+                showStatus('请输入要解码的 Base-N 字符串。', 'error');
                 return;
             }
 
             try {
-                const decodedString = base21_decode(input);
+
+                const decodedString = base_decode(input);
                 outputArea.value = decodedString;
-                showStatus('解码成功！', 'success');
+                showStatus(`解码成功！基数: ${BASE_SIZE}`, 'success');
             } catch (e) {
                 console.error(e);
                 showStatus(`解码失败: ${e.message}`, 'error');
             }
         });
 
-        // 默认提示信息
+
         window.onload = () => {
-             showStatus('请在左侧输入内容，然后选择编码或解码。');
+            validateAlphabet(); 
+            showStatus('请在左侧输入内容，然后选择编码或解码。');
         };
     </script>
 </body>
