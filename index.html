@@ -45,8 +45,8 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
             <div class="flex flex-col">
-                <label for="inputArea" class="text-sm font-medium text-gray-700 mb-2">输入文本 / Base-N 字符串</label>
-                <textarea id="inputArea" rows="10" placeholder="在此输入您想要编码的文本或解码的 Base-N 字符串..."
+                <label for="inputArea" class="text-sm font-medium text-gray-700 mb-2">输入文本 / Base21 字符串</label>
+                <textarea id="inputArea" rows="10" placeholder="在此输入您想要编码的文本或解码的 Base21 字符串..."
                           class="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 text-gray-800"></textarea>
             </div>
 
@@ -61,11 +61,11 @@
         <div class="mt-6 flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4">
             <button id="encodeButton"
                     class="flex-1 px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition duration-300 shadow-md hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-50">
-                编码 (文本 → Base-N)
+                编码 (文本 → Base21)
             </button>
             <button id="decodeButton"
                     class="flex-1 px-6 py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition duration-300 shadow-md hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-green-500 focus:ring-opacity-50">
-                解码 (Base-N → 文本)
+                解码 (Base21 → 文本)
             </button>
         </div>
 
@@ -154,10 +154,10 @@
         }
 
         /**
-         * 将 string (UTF-8) 编码为 Base-N 字符串。
+         * 将 string (UTF-8) 编码为 Base21 字符串。
          * (1 字节 -> 2 字符)
          * @param {string} dataString 要编码的字符串。
-         * @returns {string} Base-N 编码结果。
+         * @returns {string} Base21 编码结果。
          */
         function base_encode(dataString) {
             const encoder = new TextEncoder();
@@ -178,9 +178,9 @@
         }
 
         /**
-         * 将 Base-N 字符串解码为 string (UTF-8)。
+         * 将 Base21 字符串解码为 string (UTF-8)。
          * (2 字符 -> 1 字节)
-         * @param {string} encodedData Base-N 字符串。
+         * @param {string} encodedData Base21 字符串。
          * @returns {string} 解码后的字符串。
          * @throws {Error} 如果长度为奇数或包含无效字符。
          */
@@ -265,7 +265,7 @@
             showStatus('');
 
             if (!input) {
-                showStatus('请输入要解码的 Base-N 字符串。', 'error');
+                showStatus('请输入要解码的 Base21 字符串。', 'error');
                 return;
             }
 
